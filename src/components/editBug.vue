@@ -1,7 +1,7 @@
 <template>
   <div class="BugCreate">
     <div class="modal fade"
-         id="createModal"
+         id="createModalEditBug"
          tabindex="-1"
          role="dialog"
          aria-labelledby="modelTitleId"
@@ -18,7 +18,7 @@
             </button>
           </div>
           <div class="modal-body">
-            <form class="form-inline" @submit.prevent="createBug">
+            <form class="form-inline" @submit.prevent="editBugs">
               <div class="form-group">
                 <input type="text"
                        name="title"
@@ -26,7 +26,7 @@
                        class="form-control"
                        placeholder="Enter bug Title"
                        aria-describedby="helpId"
-                       v-model="state.newBug.title"
+                       v-model="state.activeBug.title"
                 >
                 <textarea type="text"
                           name="body"
@@ -34,7 +34,7 @@
                           class="form-control"
                           placeholder="Enter Body of Bug"
                           aria-describedby="helpId"
-                          v-model="state.newBug.description"
+                          v-model="state.activeBug.description"
                 ></textarea>
               </div>
             </form>
@@ -43,7 +43,7 @@
             <button type="button" class="btn btn-secondary" data-dismiss="modal">
               Close
             </button>
-            <button class="btn btn-success" @click="createBugs">
+            <button class="btn btn-success" @click="editBugs">
               Create
             </button>
           </div>
@@ -54,23 +54,25 @@
 </template>
 
 <script>
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
 import { bugsService } from '../services/BugsService'
 import { logger } from '../utils/Logger'
+import { AppState } from '../AppState'
 import $ from 'jquery'
 export default {
-  name: 'BugCreate',
+  name: 'BugEdit',
   setup() {
     const state = reactive({
-      newBug: {}
+      activeBug: computed(() => AppState.activeBug)
     })
     return {
       state,
-      async createBugs() {
+      async editBugs() {
         try {
-          await bugsService.createBugs(state.newBug)
-          state.newBug = {}
-          $('#createModal').modal('hide')
+          state.activeBug.closed = false
+          await bugsService.editBug(state.activeBug.id, state.activeBug)
+          logger.log('is it going')
+          $('#createModalEditBug').modal('hide')
         } catch (error) {
           logger.log(error)
         }
